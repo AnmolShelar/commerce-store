@@ -25,8 +25,7 @@ jobs:
           cat /tmp/api-health.json
           curl -fsS http://localhost:8080/ | grep -q "E-Commerce Store"
           curl -fsS http://localhost:8000/predict?price=80 | tee /tmp/prediction.json
-          curl -fsS -X POST http://localhost:5000/api/2.0/mlflow/experiments/search \
-            -H "Content-Type: application/json" -d '{}' | tee /tmp/experiments.json
+          curl -fsS "http://localhost:5000/api/2.0/mlflow/experiments/get-by-name?experiment_name=E-Commerce%20Demand%20Forecast" | tee /tmp/experiments.json
           grep -q "E-Commerce Demand Forecast" /tmp/experiments.json
           for i in {1..30}; do
             if curl -fsSG --data-urlencode "query=store_predictions_total" \
