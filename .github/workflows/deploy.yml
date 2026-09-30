@@ -1,0 +1,40 @@
+name: Build, test, and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+      - name: Test the app
+        run: |
+          test -f src/index.html
+          grep -q "E-Commerce Store" src/index.html
+          grep -q "Add to cart" src/index.html
+      - name: Build the website
+        run: |
+          mkdir dist
+          cp src/index.html dist/index.html
+      - name: Package the website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Set up Pages
+        uses: actions/configure-pages@v5
+      - name: Deploy the website
+        id: deployment
+        uses: actions/deploy-pages@v4

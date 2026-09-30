@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-Commerce Store</title>
+  <style>
+    body { font: 18px Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; }
+    header, .product { display: flex; justify-content: space-between; align-items: center; }
+    .product { border: 1px solid #ccc; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    button { padding: 10px 16px; cursor: pointer; }
+    #message { color: green; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>E-Commerce Store</h1>
+    <p>Cart: <span id="count">0</span> · Total: ₹<span id="total">0</span></p>
+  </header>
+
+  <h2>Products</h2>
+  <div class="product">
+    <span>Notebook — ₹80</span>
+    <button data-price="80" data-name="Notebook">Add to cart</button>
+  </div>
+  <div class="product">
+    <span>Water Bottle — ₹250</span>
+    <button data-price="250" data-name="Water Bottle">Add to cart</button>
+  </div>
+  <p id="message" role="status"></p>
+
+  <script>
+    let count = 0;
+    let total = 0;
+    document.querySelectorAll("button[data-price]").forEach((button) => {
+      button.addEventListener("click", () => {
+        count++;
+        total += Number(button.dataset.price);
+        document.querySelector("#count").textContent = count;
+        document.querySelector("#total").textContent = total;
+        document.querySelector("#message").textContent =
+          button.dataset.name + " added to cart.";
+      });
+    });
+  </script>
+</body>
+</html>
