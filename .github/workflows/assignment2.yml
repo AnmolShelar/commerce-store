@@ -1,0 +1,31 @@
+name: Assignment 2 - Docker Compose
+
+on:
+  push:
+    branches: [assignment-2]
+  workflow_dispatch:
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+      - name: Build the Docker container
+        run: docker compose build
+      - name: Deploy with Docker Compose
+        run: docker compose up -d
+      - name: Test the running store
+        run: |
+          for i in {1..20}; do
+            if curl -fsS http://localhost:8080/ | grep -q "E-Commerce Store"; then
+              echo "Store container test passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - name: Stop the Compose services
+        if: always()
+        run: docker compose down --remove-orphans
