@@ -1,2 +1,7 @@
-FROM nginx:alpine
-COPY src/index.html /usr/share/nginx/html/index.html
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py train.py ./
+COPY src ./src
+CMD ["python", "app.py"]

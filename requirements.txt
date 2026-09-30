@@ -1,0 +1,6 @@
+flask
+mlflow
+numpy
+pandas
+prometheus-client
+scikit-learn
