@@ -1,0 +1,22 @@
+{
+  "uid": "ecommerce-monitoring",
+  "title": "E-Commerce Store Monitoring",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Prediction requests",
+      "type": "timeseries",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "store_predictions_total", "legendFormat": "Predictions"}]
+    },
+    {
+      "id": 2,
+      "title": "Prediction response time",
+      "type": "timeseries",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "store_prediction_seconds_sum", "legendFormat": "Seconds"}]
+    }
+  ]
+}

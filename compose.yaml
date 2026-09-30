@@ -1,0 +1,69 @@
+services:
+  store:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/usr/share/nginx/html:ro
+
+  mlflow:
+    build: .
+    command: ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "sqlite:////mlflow/mlflow.db", "--artifacts-destination", "/mlartifacts", "--serve-artifacts", "--allowed-hosts", "*"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+      - mlflow-artifacts:/mlartifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000').read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  trainer:
+    build: .
+    command: ["python", "train.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    command: ["python", "app.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    ports:
+      - "8000:8000"
+    depends_on:
+      trainer:
+        condition: service_completed_successfully
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: assignment2demo
+    volumes:
+      - ./monitoring/grafana/provisioning/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./monitoring/grafana/provisioning/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml:ro
+      - ./monitoring/dashboard.json:/var/lib/grafana/dashboards/store.json:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  mlflow-data:
+  mlflow-artifacts:

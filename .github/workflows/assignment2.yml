@@ -1,0 +1,44 @@
+name: Assignment 2 - Docker Compose
+
+on:
+  push:
+    branches: [assignment-2]
+  workflow_dispatch:
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+      - name: Build containers
+        run: docker compose build
+      - name: Deploy with Docker Compose
+        run: docker compose up -d
+      - name: Test store, MLflow, model, Prometheus, and Grafana
+        run: |
+          set -e
+          for i in {1..60}; do
+            if curl -fsS http://localhost:8000/health -o /tmp/api-health.json; then break; fi
+            sleep 2
+          done
+          cat /tmp/api-health.json
+          curl -fsS http://localhost:8080/ | grep -q "E-Commerce Store"
+          curl -fsS http://localhost:8000/predict?price=80 | tee /tmp/prediction.json
+          curl -fsS "http://localhost:5000/api/2.0/mlflow/experiments/get-by-name?experiment_name=E-Commerce%20Demand%20Forecast" | tee /tmp/experiments.json
+          grep -q "E-Commerce Demand Forecast" /tmp/experiments.json
+          for i in {1..30}; do
+            if curl -fsSG --data-urlencode "query=store_predictions_total" \
+              http://localhost:9090/api/v1/query | grep -q "store_predictions_total"; then break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:3000/api/health
+          curl -fsS -u admin:assignment2demo \
+            http://localhost:3000/api/dashboards/uid/ecommerce-monitoring \
+            | grep -q "E-Commerce Store Monitoring"
+      - name: Show logs if a check fails
+        if: failure()
+        run: docker compose logs
+      - name: Stop services
+        if: always()
+        run: docker compose down --volumes --remove-orphans
